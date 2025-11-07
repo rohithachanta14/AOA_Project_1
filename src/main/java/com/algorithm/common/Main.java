@@ -1,0 +1,93 @@
+package com.algorithm.common;
+
+import com.algorithm.greedy.*;
+import com.algorithm.divideconquer.*;
+import java.util.*;
+
+public class Main {
+    public static void main(String[] args) {
+        if (args.length == 0) {
+            showUsage();
+            return;
+        }
+        
+        String command = args[0].toLowerCase();
+        try {
+            switch (command) {
+                case "greedy": runGreedyDemo(); break;
+                case "divideconquer":
+                case "dc": runDivideConquerDemo(); break;
+                case "compare": runComparison(); break;
+                default: showUsage();
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
+    
+    private static void showUsage() {
+        System.out.println("Algorithm Project - Greedy & Divide-Conquer");
+        System.out.println("Usage:");
+        System.out.println("  mvn exec:java -Dexec.args=\"greedy\"");
+        System.out.println("  mvn exec:java -Dexec.args=\"divideconquer\"");
+        System.out.println("  mvn exec:java -Dexec.args=\"compare\"");
+    }
+    
+    private static void runGreedyDemo() {
+        System.out.println("\n=== GREEDY: INFLUENCE MAXIMIZATION ===\n");
+        
+        InfluenceMaximization im = new InfluenceMaximization("IC", 42);
+        
+        Random rand = new Random(42);
+        for (int i = 0; i < 50; i++) {
+            for (int j = i + 1; j < 50; j++) {
+                if (rand.nextDouble() < 0.06) {
+                    im.addEdge(i, j);
+                }
+            }
+        }
+        
+        im.initializePropagationParameters();
+        
+        System.out.println("Network: " + im.getNumNodes() + " users, " + im.getNumEdges() + " connections");
+        System.out.println("Finding 5 influential seeds with CELF...\n");
+        
+        InfluenceMaximization.Result result = im.celfIM(5, 500, true);
+        
+        System.out.println("\nSelected seeds: " + result.seeds);
+        System.out.println("Total time: " + String.format("%.2f seconds", result.totalTime));
+    }
+    
+    private static void runDivideConquerDemo() {
+        System.out.println("\n=== DIVIDE & CONQUER: AIR TRAFFIC CONTROL ===\n");
+        
+        CollisionDetector atc = new CollisionDetector();
+        List<Aircraft> aircraft = CollisionDetector.generateRandomAircraft(100, new Random(42));
+        atc.addMultipleAircraft(aircraft);
+        
+        System.out.println("Monitoring " + atc.getAircraftCount() + " aircraft...\n");
+        
+        long startDC = System.nanoTime();
+        AircraftPair closestDC = atc.detectCollisionRiskDC();
+        long timeDC = System.nanoTime() - startDC;
+        
+        long startBF = System.nanoTime();
+        AircraftPair closestBF = atc.detectCollisionRiskBruteForce();
+        long timeBF = System.nanoTime() - startBF;
+        
+        System.out.println("Closest pair (D&C): " + closestDC);
+        System.out.println("Time: " + (timeDC / 1000) + " μs\n");
+        System.out.println("Closest pair (Brute Force): " + closestBF);
+        System.out.println("Time: " + (timeBF / 1000) + " μs\n");
+        System.out.println("Speedup: " + String.format("%.2fx", (double)timeBF / timeDC));
+        
+        if (atc.isCollisionRisk(closestDC)) {
+            System.out.println("\n⚠️  COLLISION RISK DETECTED!");
+        }
+    }
+    
+    private static void runComparison() {
+        runGreedyDemo();
+        runDivideConquerDemo();
+    }
+}
